@@ -1,0 +1,15 @@
+{
+  "name": "goldman-ai-video",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:api": "npm --workspace @goldman-ai-video/api run dev",
+    "dev:worker": "npm --workspace @goldman-ai-video/generation-worker run dev",
+    "build": "npm run -ws build"
+  }
+}

@@ -1,0 +1,6 @@
+models:
+  - id: zeroscope-v2-xl
+    adapter: ZeroScopeV2XLAdapter
+    supports_t2v: true
+    supports_i2v: false
+    max_duration_s: 8
