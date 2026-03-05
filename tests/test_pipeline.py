@@ -415,3 +415,113 @@ def test_generation_request_resolution_presets_map_to_dimensions():
 
     assert (req_1080.width, req_1080.height) == (1920, 1080)
     assert (req_4k.width, req_4k.height) == (3840, 2160)
+
+
+def test_image_animation_is_deterministic_with_fixed_seed(tmp_path: Path, monkeypatch):
+    PIL = pytest.importorskip("PIL")
+    np = pytest.importorskip("numpy")
+    pytest.importorskip("imageio.v3")
+
+    from goldman_video.config import GenerationRequest
+    from goldman_video.pipeline import VideoGenerator
+    import goldman_video.pipeline as pipeline_mod
+
+    image = tmp_path / "seed.png"
+    grad = np.tile(np.arange(32, dtype=np.uint8), (32, 1))
+    rgb = np.stack([grad, grad, grad], axis=2)
+    PIL.Image.fromarray(rgb).save(image)
+
+    class FakeWriter:
+        def __init__(self, bucket):
+            self.bucket = bucket
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def init_video_stream(self, *_args, **_kwargs):
+            return None
+
+        def write_frame(self, frame):
+            self.bucket.append(frame.copy())
+
+    captures: list[list[np.ndarray]] = [[], []]
+
+    def mk_imopen(idx):
+        def _imopen(_output, _mode):
+            return FakeWriter(captures[idx])
+        return _imopen
+
+    req = GenerationRequest(
+        prompt="animate",
+        image_path=image,
+        width=32,
+        height=32,
+        num_frames=6,
+        fps=24,
+        seed=123,
+        animation_style="pan_zoom",
+        animation_intensity=1.0,
+        output_path=tmp_path / "x.mp4",
+    )
+
+    monkeypatch.setattr(pipeline_mod.iio, "imopen", mk_imopen(0))
+    VideoGenerator()._mock_generate(req, tmp_path / "a.mp4")
+
+    monkeypatch.setattr(pipeline_mod.iio, "imopen", mk_imopen(1))
+    VideoGenerator()._mock_generate(req, tmp_path / "b.mp4")
+
+    assert len(captures[0]) == len(captures[1]) == 6
+    for f1, f2 in zip(captures[0], captures[1]):
+        assert np.array_equal(f1, f2)
+
+
+def test_image_animation_pan_mode_has_no_random_noise(tmp_path: Path, monkeypatch):
+    PIL = pytest.importorskip("PIL")
+    np = pytest.importorskip("numpy")
+    pytest.importorskip("imageio.v3")
+
+    from goldman_video.config import GenerationRequest
+    from goldman_video.pipeline import VideoGenerator
+    import goldman_video.pipeline as pipeline_mod
+
+    image = tmp_path / "flat.png"
+    flat = np.full((24, 24, 3), 120, dtype=np.uint8)
+    PIL.Image.fromarray(flat).save(image)
+
+    frames: list[np.ndarray] = []
+
+    class FakeWriter:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def init_video_stream(self, *_args, **_kwargs):
+            return None
+
+        def write_frame(self, frame):
+            frames.append(frame.copy())
+
+    monkeypatch.setattr(pipeline_mod.iio, "imopen", lambda *_args, **_kwargs: FakeWriter())
+
+    req = GenerationRequest(
+        prompt="animate",
+        image_path=image,
+        width=24,
+        height=24,
+        num_frames=5,
+        fps=24,
+        animation_style="pan",
+        animation_intensity=1.0,
+        output_path=tmp_path / "flat.mp4",
+    )
+
+    VideoGenerator()._mock_generate(req, tmp_path / "flat_out.mp4")
+
+    assert len(frames) == 5
+    for f in frames[1:]:
+        assert np.array_equal(f, frames[0])

@@ -29,6 +29,8 @@ def _build_request(
     gpu: str = "auto",
     low_vram: bool = False,
     precision: str = "fp16",
+    animation_style: str = "pan_zoom",
+    animation_intensity: float = 1.0,
 ) -> GenerationRequest:
     req = GenerationRequest(
         prompt=prompt,
@@ -49,6 +51,8 @@ def _build_request(
         device=gpu,
         low_vram=low_vram,
         precision=precision,
+        animation_style=animation_style,
+        animation_intensity=animation_intensity,
     )
     return req
 
@@ -71,6 +75,8 @@ def text2video(
     gpu: str = typer.Option("auto", help="auto | cpu | cuda"),
     low_vram: bool = False,
     precision: str = typer.Option("fp16", help="fp32 | fp16 | bf16"),
+    animation_style: str = typer.Option("pan_zoom", help="pan | zoom | pan_zoom"),
+    animation_intensity: float = typer.Option(1.0, help="Deterministic animation strength"),
 ):
     req = _build_request(
         prompt=prompt,
@@ -89,6 +95,8 @@ def text2video(
         gpu=gpu,
         low_vram=low_vram,
         precision=precision,
+        animation_style=animation_style,
+        animation_intensity=animation_intensity,
     )
     out = VideoGenerator().generate(req)
     typer.echo(f"Saved: {out}")
@@ -113,6 +121,8 @@ def image2video(
     gpu: str = typer.Option("auto", help="auto | cpu | cuda"),
     low_vram: bool = False,
     precision: str = typer.Option("fp16", help="fp32 | fp16 | bf16"),
+    animation_style: str = typer.Option("pan_zoom", help="pan | zoom | pan_zoom"),
+    animation_intensity: float = typer.Option(1.0, help="Deterministic animation strength"),
 ):
     req = _build_request(
         prompt=prompt,
@@ -132,6 +142,8 @@ def image2video(
         gpu=gpu,
         low_vram=low_vram,
         precision=precision,
+        animation_style=animation_style,
+        animation_intensity=animation_intensity,
     )
     out = VideoGenerator().generate(req)
     typer.echo(f"Saved: {out}")
@@ -186,6 +198,8 @@ def multishot(
         gpu=gpu,
         low_vram=low_vram,
         precision=precision,
+        animation_style="pan_zoom",
+        animation_intensity=1.0,
     )
     out = VideoGenerator().generate(req)
     typer.echo(f"Saved: {out}")

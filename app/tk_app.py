@@ -90,6 +90,8 @@ def build_generation_request(
     audio_volume: float,
     audio_loop: bool,
     watermark_text: str,
+    animation_style: str = "pan_zoom",
+    animation_intensity: float = 1.0,
 ) -> GenerationRequest:
     prompt = prompt.strip()
     if mode == "multishot":
@@ -109,6 +111,8 @@ def build_generation_request(
             audio_volume=audio_volume,
             audio_loop=audio_loop,
             watermark_text=watermark_text,
+            animation_style=animation_style,
+            animation_intensity=animation_intensity,
         )
 
     if mode == "image2video" and image_path is None:
@@ -127,6 +131,8 @@ def build_generation_request(
         audio_volume=audio_volume,
         audio_loop=audio_loop,
         watermark_text=watermark_text,
+        animation_style=animation_style,
+        animation_intensity=animation_intensity,
     )
 
 

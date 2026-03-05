@@ -20,7 +20,7 @@ This starter exposes a model catalog in `goldman_video.config.OPEN_SOURCE_MODELS
 The repository currently ships with a lightweight mock generator so you can build product plumbing first:
 
 - `text2video` mock mode generates synthetic frames
-- `image2video` mock mode uses your source image and creates a simple animated sequence
+- `image2video` mock mode uses your source image and creates a deterministic pan/zoom animation (no random noise grain)
 
 Then replace `_mock_generate` in `src/goldman_video/pipeline.py` with real Diffusers inference.
 
@@ -42,7 +42,7 @@ pip install -e .[gen]
 goldman-video models
 goldman-video text2video "a friendly 3D mascot introducing Goldman AI" --output outputs/intro.mp4 --fps 24 --duration 5 --resolution 1080p --gpu cuda
 goldman-video text2video "mascot cinematic reveal" --output outputs/intro_audio.mp4 --audio assets/voiceover.mp3 --audio-start 0.5 --audio-volume 0.9
-goldman-video image2video "camera orbit around the mascot" --image assets/mascot.png --output outputs/orbit.mp4 --audio assets/music.wav --audio-loop
+goldman-video image2video "camera orbit around the mascot" --image assets/mascot.png --output outputs/orbit.mp4 --audio assets/music.wav --audio-loop --animation-style pan_zoom --animation-intensity 1.0
 goldman-video multishot shots/demo_shots.json --output outputs/story.mp4 --audio assets/score.mp3 --audio-loop
 goldman-video-tk
 ```

@@ -143,11 +143,33 @@ class VideoGenerator:
                 raise ValueError(f"image_path is not readable as an image: {req.image_path}") from exc
 
             resized = np.asarray(base.resize((req.width, req.height), Image.Resampling.LANCZOS))
+            span = max(req.num_frames - 1, 1)
+            style = req.animation_style
+            intensity = float(req.animation_intensity)
+
             for i in range(req.num_frames):
-                shift = int((i / max(req.num_frames - 1, 1)) * max(req.width // 24, 1))
-                frame = np.roll(resized, shift=shift, axis=1).astype(np.int16)
-                noise = rng.integers(-6, 7, size=frame.shape, dtype=np.int16)
-                yield np.clip(frame + noise, 0, 255).astype(np.uint8)
+                t = i / span
+                frame = resized
+
+                if style in {"pan", "pan_zoom"}:
+                    max_shift = max(1, int((req.width // 24) * intensity))
+                    base_shift = int(t * max_shift)
+                    wobble = int(round(np.sin(t * np.pi * 2) * max(1, int(max_shift * 0.25))))
+                    frame = np.roll(frame, shift=base_shift + wobble, axis=1)
+
+                if style in {"zoom", "pan_zoom"}:
+                    max_zoom = min(0.12 * intensity, 0.25)
+                    zoom = 1.0 + (max_zoom * t)
+                    crop_w = max(1, int(req.width / zoom))
+                    crop_h = max(1, int(req.height / zoom))
+                    cx = req.width // 2
+                    cy = req.height // 2
+                    x0 = max(0, min(req.width - crop_w, cx - crop_w // 2))
+                    y0 = max(0, min(req.height - crop_h, cy - crop_h // 2))
+                    cropped = frame[y0:y0 + crop_h, x0:x0 + crop_w]
+                    frame = np.asarray(Image.fromarray(cropped).resize((req.width, req.height), Image.Resampling.LANCZOS))
+
+                yield frame.astype(np.uint8)
 
         # Stream-write frames to reduce memory footprint for 1080p/4k and longer durations.
         try:
