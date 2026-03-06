@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "goldman-video"
+version = "1.0.0"
+description = "Open-source-first text/image to video pipeline with safety and watermarking"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "pydantic>=2.7",
+  "typer>=0.12",
+  "Pillow>=10.3",
+  "imageio>=2.34",
+  "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+gen = [
+  "torch>=2.2",
+  "diffusers>=0.30",
+  "transformers>=4.43",
+  "accelerate>=0.33",
+]
+
+[project.scripts]
+goldman-video = "goldman_video.cli:app"
+goldman-video-tk = "app.tk_app:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
