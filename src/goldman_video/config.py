@@ -48,6 +48,9 @@ class GenerationRequest(BaseModel):
     device: DevicePreset = "auto"
     low_vram: bool = False
     precision: PrecisionPreset = "fp16"
+    vae_model_id: str | None = None
+    vae_tiling: bool = False
+    vae_slicing: bool = False
     animation_style: AnimationStyle = "pan_zoom"
     animation_intensity: float = Field(default=1.0, ge=0.0)
     output_path: Path = Path("outputs/generated.mp4")
@@ -74,5 +77,9 @@ OPEN_SOURCE_MODELS = {
     "image_to_video": {
         "model_id": "stabilityai/stable-video-diffusion-img2vid-xt",
         "notes": "Open model for image-conditioned video generation.",
+    },
+    "vae": {
+        "model_id": "stabilityai/sd-vae-ft-mse",
+        "notes": "Optional VAE for higher-fidelity latent decode in diffusers pipelines.",
     },
 }
